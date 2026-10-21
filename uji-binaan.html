@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uji Pencocokan Binaan</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 24px auto;
+      padding: 16px;
+      background: #f1f5f9;
+      color: #172033;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+    }
+    button {
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #0f766e;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #f8fafc;
+      padding: 14px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <h2>Uji Pencocokan Binaan</h2>
+    <p>Pengujian hanya membaca data Firebase.</p>
+    <button id="ujiBtn">Jalankan 3 Pengujian</button>
+    <pre id="hasil">Belum diuji.</pre>
+  </section>
+
+  <script type="module">
+    import { auth, db } from "./firebase.js";
+    import { onAuthStateChanged } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import { doc, getDoc } from
+      "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const UPA_ID = "UPA_TEST_001";
+    const hasil = document.getElementById("hasil");
+    const tombol = document.getElementById("ujiBtn");
+
+    let pengguna = null;
+
+    onAuthStateChanged(auth, user => {
+      pengguna = user;
+      if (!user) {
+        hasil.textContent =
+          "Silakan login terlebih dahulu melalui aplikasi utama.";
+      }
+    });
+
+    async function cocokkan(id) {
+      if (!id) {
+        return {
+          nama: "(ID binaan tidak tersedia)",
+          status: "ID kosong"
+        };
+      }
+
+      const snap = await getDoc(
+        doc(db, "upas", UPA_ID, "binaan", id)
+      );
+
+      if (!snap.exists()) {
+        return {
+          nama: "(tidak ditemukan)",
+          status: "Tidak ditemukan"
+        };
+      }
+
+      return {
+        nama: snap.data().nama || "(nama tidak tersedia)",
+        status: "Ditemukan"
+      };
+    }
+
+    tombol.addEventListener("click", async () => {
+      tombol.disabled = true;
+      hasil.textContent = "Sedang menjalankan pengujian…";
+
+      try {
+        if (!pengguna) {
+          throw new Error(
+            "Belum login. Login melalui aplikasi utama, lalu buka halaman ini lagi."
+          );
+        }
+
+        const kasus = [
+          { label: "1. ID valid", id: "BIN_TEST_001" },
+          { label: "2. ID tidak terdaftar", id: "BIN_TIDAK_ADA_999" },
+          { label: "3. ID kosong", id: "" }
+        ];
+
+        const laporan = [];
+
+        for (const kasusUji of kasus) {
+          const hasilUji = await cocokkan(kasusUji.id);
+
+          laporan.push(
+            `${kasusUji.label}\n` +
+            `ID: ${kasusUji.id || "(kosong)"}\n` +
+            `Nama: ${hasilUji.nama}\n` +
+            `Hasil: ${hasilUji.status}`
+          );
+        }
+
+        hasil.textContent =
+          "PENGUJIAN SELESAI\n\n" + laporan.join("\n\n");
+      } catch (error) {
+        hasil.textContent =
+          "Pengujian gagal: " + (error.message || error);
+      } finally {
+        tombol.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
