@@ -1,5 +1,5 @@
-
 import { auth, db } from "./firebase.js";
+
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -18,13 +18,12 @@ const $ = id => document.getElementById(id);
 
 let profileValid = false;
 
-function show(el, visible) {
-  if (el) el.classList.toggle("hidden", !visible);
+function show(el, yes) {
+  el.classList.toggle("hidden", !yes);
 }
 
 function say(id, text) {
-  const el = $(id);
-  if (el) el.textContent = text;
+  $(id).textContent = text;
 }
 
 function errText(error) {
@@ -116,8 +115,8 @@ async function checkProfile(user) {
 }
 
 // LOGIN
-$("loginForm").addEventListener("submit", async event => {
-  event.preventDefault();
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
 
   $("loginBtn").disabled = true;
   say("loginStatus", "Sedang masuk…");
@@ -140,12 +139,9 @@ $("loginForm").addEventListener("submit", async event => {
   }
 });
 
-// PERIKSA PROFIL LAGI
+// PERIKSA PROFIL
 $("refreshBtn").addEventListener("click", async () => {
-  if (!auth.currentUser) {
-    say("dataStatus", "Anda belum login.");
-    return;
-  }
+  if (!auth.currentUser) return;
 
   try {
     await checkProfile(auth.currentUser);
@@ -153,7 +149,7 @@ $("refreshBtn").addEventListener("click", async () => {
     say(
       "dataStatus",
       profileValid
-        ? "Profil diperiksa ulang. Silakan pilih pengujian."
+        ? "Profil diperiksa ulang. Silakan pilih pengujian yang ingin dijalankan."
         : "Profil belum lolos pemeriksaan."
     );
   } catch (error) {
@@ -161,18 +157,14 @@ $("refreshBtn").addEventListener("click", async () => {
   }
 });
 
-// UJI BACA UPA DAN BINAAN
+// UJI BACA DATA UPA DAN BINAAN
 $("loadBtn").addEventListener("click", async () => {
-  const button = $("loadBtn");
-  button.disabled = true;
+  $("loadBtn").disabled = true;
 
   show($("upaResult"), false);
   show($("binaanResult"), false);
 
-  say(
-    "dataStatus",
-    "Sedang menguji pembacaan data UPA dan binaan…"
-  );
+  say("dataStatus", "Sedang menguji pembacaan data UPA dan binaan…");
 
   try {
     if (!auth.currentUser) {
@@ -240,15 +232,15 @@ $("loadBtn").addEventListener("click", async () => {
       `Pengujian belum berhasil: ${errText(error)}`
     );
   } finally {
-    button.disabled = false;
+    $("loadBtn").disabled = false;
   }
 });
 
 // UJI BACA MUTABAAH DAN COCOKKAN NAMA BINAAN
 $("mutabaahBtn").addEventListener("click", async () => {
   const button = $("mutabaahBtn");
-  button.disabled = true;
 
+  button.disabled = true;
   show($("mutabaahResult"), false);
 
   say(
@@ -269,7 +261,6 @@ $("mutabaahBtn").addEventListener("click", async () => {
       );
     }
 
-    // Membaca seluruh catatan Mutabaah.
     const mutabaahSnap = await getDocs(
       collection(db, "upas", UPA_ID, "mutabaah")
     );
@@ -288,14 +279,14 @@ $("mutabaahBtn").addEventListener("click", async () => {
       return;
     }
 
-    // Mencocokkan binaanId setiap catatan dengan dokumen binaan.
+    // Baca setiap catatan dan cari dokumen binaan terkait.
     const records = await Promise.all(
       mutabaahSnap.docs.map(async d => {
         const v = d.data();
         const binaanId = v.binaanId;
 
-        let namaBinaan = "(ID binaan tidak tersedia)";
-        let statusBinaan = "Tidak dapat dicocokkan";
+        let namaBinaan = "(tidak ditemukan)";
+        let pencocokan = "Tidak ditemukan";
 
         if (binaanId) {
           try {
@@ -306,23 +297,22 @@ $("mutabaahBtn").addEventListener("click", async () => {
             if (binaanSnap.exists()) {
               const binaan = binaanSnap.data();
 
-              namaBinaan = binaan.nama ?? "(nama binaan kosong)";
-              statusBinaan = "Ditemukan";
-            } else {
-              namaBinaan = "(dokumen binaan tidak ditemukan)";
-              statusBinaan = "Tidak ditemukan";
+              namaBinaan = binaan.nama ?? "(nama tidak tersedia)";
+              pencocokan = "Ditemukan";
             }
           } catch (error) {
-            namaBinaan = "(gagal membaca dokumen binaan)";
-            statusBinaan = errText(error);
+            namaBinaan = "Gagal membaca data binaan";
+            pencocokan = "Gagal diperiksa";
           }
+        } else {
+          namaBinaan = "(ID binaan tidak tersedia)";
         }
 
         return (
           `ID catatan: ${d.id}\n` +
           `ID binaan: ${binaanId ?? "(tidak ada)"}\n` +
           `Nama binaan: ${namaBinaan}\n` +
-          `Pencocokan binaan: ${statusBinaan}\n` +
+          `Pencocokan binaan: ${pencocokan}\n` +
           `Tanggal: ${v.tanggal ?? "(tidak ada)"}\n` +
           `Jenis: ${v.jenis ?? "(tidak ada)"}\n` +
           `Catatan: ${v.catatan ?? "(tidak ada)"}\n` +
@@ -339,7 +329,7 @@ $("mutabaahBtn").addEventListener("click", async () => {
 
     say(
       "dataStatus",
-      `BERHASIL: ${records.length} catatan Mutabaah dibaca dan pencocokan data binaan telah diperiksa.`
+      `BERHASIL: ${records.length} catatan Mutabaah dibaca dan pencocokan binaan diperiksa.`
     );
   } catch (error) {
     say(
@@ -351,7 +341,7 @@ $("mutabaahBtn").addEventListener("click", async () => {
   }
 });
 
-// LOGOUT
+// KELUAR
 $("logoutBtn").addEventListener("click", async () => {
   try {
     await signOut(auth);
@@ -360,7 +350,7 @@ $("logoutBtn").addEventListener("click", async () => {
   }
 });
 
-// STATUS LOGIN SAAT APLIKASI DIBUKA
+// STATUS LOGIN
 onAuthStateChanged(auth, async user => {
   show($("loginCard"), !user);
   show($("dashboard"), !!user);
@@ -382,8 +372,6 @@ onAuthStateChanged(auth, async user => {
   try {
     await checkProfile(user);
   } catch (error) {
-    profileValid = false;
-
     say(
       "accountStatus",
       `Gagal memeriksa profil: ${errText(error)}`
