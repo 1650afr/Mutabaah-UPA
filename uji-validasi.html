@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uji Validasi Mutabaah</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 24px auto;
+      padding: 16px;
+      background: #f1f5f9;
+      color: #172033;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-top: 14px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 6px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #0f766e;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: #f8fafc;
+      padding: 14px;
+      border-radius: 8px;
+    }
+    .note { color: #475569; }
+  </style>
+</head>
+<body>
+  <section class="card">
+    <h2>Uji Validasi Mutabaah</h2>
+    <p class="note">
+      Pengujian lokal. Tidak membaca atau mengubah Firebase.
+    </p>
+
+    <label for="tanggal">Tanggal</label>
+    <input id="tanggal" value="2026-10-21"
+           placeholder="YYYY-MM-DD">
+
+    <label for="jenis">Jenis Mutabaah</label>
+    <input id="jenis" value="hafalan"
+           placeholder="Masukkan jenis">
+
+    <label for="status">Status</label>
+    <input id="status" value="selesai"
+           placeholder="Masukkan status">
+
+    <button id="ujiBtn" type="button">
+      Periksa Validasi
+    </button>
+
+    <pre id="hasil">Belum diuji.</pre>
+  </section>
+
+  <script>
+    const tanggal = document.getElementById("tanggal");
+    const jenis = document.getElementById("jenis");
+    const status = document.getElementById("status");
+    const hasil = document.getElementById("hasil");
+
+    function tanggalValid(nilai) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(nilai)) {
+        return false;
+      }
+
+      const bagian = nilai.split("-").map(Number);
+      const tanggalObj = new Date(
+        Date.UTC(bagian[0], bagian[1] - 1, bagian[2])
+      );
+
+      return tanggalObj.getUTCFullYear() === bagian[0] &&
+        tanggalObj.getUTCMonth() === bagian[1] - 1 &&
+        tanggalObj.getUTCDate() === bagian[2];
+    }
+
+    document.getElementById("ujiBtn").addEventListener("click", () => {
+      const t = tanggal.value.trim();
+      const j = jenis.value.trim();
+      const s = status.value.trim();
+
+      const hasilTanggal = tanggalValid(t);
+      const hasilJenis = j.length > 0;
+      const hasilStatus = s.length > 0;
+
+      hasil.textContent =
+        "HASIL VALIDASI LOKAL\n\n" +
+        "Tanggal: " + (hasilTanggal ? "Valid" : "Tidak valid") +
+        "\nJenis: " + (hasilJenis ? "Terisi" : "Kosong") +
+        "\nStatus: " + (hasilStatus ? "Terisi" : "Kosong") +
+        "\n\nKesimpulan: " +
+        (hasilTanggal && hasilJenis && hasilStatus
+          ? "Semua pemeriksaan dasar lolos."
+          : "Ada pemeriksaan dasar yang belum lolos.") +
+        "\n\nCatatan: pemeriksaan ini hanya memeriksa format tanggal " +
+        "dan apakah jenis serta status terisi. Daftar nilai resmi " +
+        "jenis/status belum ditetapkan.";
+    });
+  </script>
+</body>
+</html>
