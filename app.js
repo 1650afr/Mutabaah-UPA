@@ -53,7 +53,11 @@ function errText(error) {
     code === "permission-denied" ||
     code === "firestore/permission-denied"
   ) {
-    return "Akses ditolak Firestore Rules. Periksa izin akun dan jalur data.";
+    return (
+      "Akses ditolak Firestore Rules. " +
+      "Periksa UID pembina, penugasan binaan, profil, " +
+      "dan field dokumen Mutabaah."
+    );
   }
 
   if (code === "auth/unauthorized-domain") {
@@ -66,6 +70,10 @@ function errText(error) {
 
   if (code === "auth/invalid-email") {
     return "Format email tidak valid.";
+  }
+
+  if (code === "failed-precondition") {
+    return "Operasi gagal karena prasyarat Firestore belum terpenuhi.";
   }
 
   return `${error?.message || "Terjadi kesalahan."}${
@@ -101,6 +109,7 @@ function todayString() {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -118,9 +127,15 @@ async function checkProfile(user) {
     `UID: ${user.uid}\nMemeriksa profil akun…`
   );
 
-  const snap = await getDoc(
-    doc(db, "upas", UPA_ID, "users", user.uid)
+  const profileRef = doc(
+    db,
+    "upas",
+    UPA_ID,
+    "users",
+    user.uid
   );
+
+  const snap = await getDoc(profileRef);
 
   if (!snap.exists()) {
     say(
@@ -145,6 +160,7 @@ async function checkProfile(user) {
       `UPA: ${p.upaId ?? "(kosong)"}\n` +
       `Aktif: ${p.aktif ?? "(kosong)"}`
     );
+
     return false;
   }
 
@@ -186,21 +202,29 @@ async function loadBinaan() {
 
   if (!auth.currentUser || !profileValid || !currentProfile) {
     select.replaceChildren();
+
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "Login dan verifikasi akun terlebih dahulu";
+    option.textContent =
+      "Login dan verifikasi akun terlebih dahulu";
+
     select.appendChild(option);
     return;
   }
 
   try {
-    const binaanCollection = collection(db, "upas", UPA_ID, "binaan");
+    const binaanCollection = collection(
+      db,
+      "upas",
+      UPA_ID,
+      "binaan"
+    );
+
     let binaanQuery;
 
     if (currentProfile.role === "admin_upa") {
       binaanQuery = query(binaanCollection);
     } else {
-      // Penugasan pembina memakai field pembinaUid pada dokumen binaan.
       binaanQuery = query(
         binaanCollection,
         where("pembinaUid", "==", auth.currentUser.uid)
@@ -224,17 +248,24 @@ async function loadBinaan() {
       const option = document.createElement("option");
       option.value = d.id;
       option.textContent = data.nama || `Binaan ${d.id}`;
+
       select.appendChild(option);
     });
 
     if (select.options.length === 1) {
-      first.textContent = "Belum ada binaan aktif yang ditugaskan";
+      first.textContent =
+        "Belum ada binaan aktif yang ditugaskan";
+
       say(
         "saveStatus",
-        "Tidak ada binaan aktif yang dapat dipilih. Periksa penugasan pembina."
+        "Tidak ada binaan aktif yang dapat dipilih. " +
+        "Periksa field aktif dan penugasan pembina."
       );
     } else {
-      say("saveStatus", "Pilih binaan, lengkapi formulir, lalu simpan.");
+      say(
+        "saveStatus",
+        "Pilih binaan, lengkapi formulir, lalu simpan."
+      );
     }
   } catch (error) {
     select.replaceChildren();
@@ -242,9 +273,13 @@ async function loadBinaan() {
     const option = document.createElement("option");
     option.value = "";
     option.textContent = "Gagal memuat binaan";
+
     select.appendChild(option);
 
-    say("saveStatus", `Gagal memuat binaan: ${errText(error)}`);
+    say(
+      "saveStatus",
+      `Gagal memuat binaan: ${errText(error)}`
+    );
   }
 }
 
@@ -264,7 +299,11 @@ $("loginForm")?.addEventListener("submit", async event => {
     }
 
     await signInWithEmailAndPassword(auth, email, password);
-    say("loginStatus", "Login berhasil. Memeriksa profil akun…");
+
+    say(
+      "loginStatus",
+      "Login berhasil. Memeriksa profil akun…"
+    );
   } catch (error) {
     say("loginStatus", errText(error));
   } finally {
@@ -290,10 +329,15 @@ $("refreshBtn")?.addEventListener("click", async () => {
 
     say(
       "dataStatus",
-      valid ? "Profil lolos pemeriksaan." : "Profil belum lolos pemeriksaan."
+      valid
+        ? "Profil lolos pemeriksaan."
+        : "Profil belum lolos pemeriksaan."
     );
   } catch (error) {
-    say("accountStatus", errText(error));
+    say(
+      "accountStatus",
+      `Gagal memeriksa profil: ${errText(error)}`
+    );
   } finally {
     setBusy("refreshBtn", false);
   }
@@ -304,19 +348,32 @@ $("loadBtn")?.addEventListener("click", async () => {
   setBusy("loadBtn", true);
   show($("upaResult"), false);
   show($("binaanResult"), false);
-  say("dataStatus", "Menguji pembacaan data UPA dan binaan…");
+
+  say(
+    "dataStatus",
+    "Menguji pembacaan data UPA dan binaan…"
+  );
 
   try {
-    if (!auth.currentUser) throw new Error("Anda belum login.");
-
-    const valid = await checkProfile(auth.currentUser);
-    if (!valid) throw new Error("Profil akun belum lolos pemeriksaan.");
-
-    if (currentProfile.role !== "admin_upa") {
-      throw new Error("Pengujian seluruh data UPA hanya untuk admin.");
+    if (!auth.currentUser) {
+      throw new Error("Anda belum login.");
     }
 
-    const upaSnap = await getDoc(doc(db, "upas", UPA_ID));
+    const valid = await checkProfile(auth.currentUser);
+
+    if (!valid) {
+      throw new Error("Profil akun belum lolos pemeriksaan.");
+    }
+
+    if (currentProfile.role !== "admin_upa") {
+      throw new Error(
+        "Pengujian seluruh data UPA hanya untuk admin."
+      );
+    }
+
+    const upaSnap = await getDoc(
+      doc(db, "upas", UPA_ID)
+    );
 
     if (!upaSnap.exists()) {
       throw new Error("Dokumen UPA tidak ditemukan.");
@@ -331,6 +388,7 @@ $("loadBtn")?.addEventListener("click", async () => {
       `Nama: ${upa.namaUPA ?? "(tidak ada)"}\n` +
       `Aktif: ${upa.aktif ?? "(tidak ada)"}`
     );
+
     show($("upaResult"), true);
 
     const binaanSnap = await getDocs(
@@ -339,19 +397,35 @@ $("loadBtn")?.addEventListener("click", async () => {
 
     const names = binaanSnap.docs.map(d => {
       const v = d.data();
-      return `${v.nama ?? "(tanpa nama)"} — ID: ${d.id} — aktif: ${v.aktif ?? "(tidak ada)"}`;
+
+      return (
+        `${v.nama ?? "(tanpa nama)"} — ` +
+        `ID: ${d.id} — ` +
+        `aktif: ${v.aktif ?? "(tidak ada)"}`
+      );
     });
 
     say(
       "binaanResult",
       `Daftar binaan (${names.length})\n` +
-      (names.length ? names.join("\n") : "Belum ada dokumen binaan.")
+      (
+        names.length
+          ? names.join("\n")
+          : "Belum ada dokumen binaan."
+      )
     );
+
     show($("binaanResult"), true);
 
-    say("dataStatus", "BERHASIL: data UPA dan binaan dapat dibaca.");
+    say(
+      "dataStatus",
+      "BERHASIL: data UPA dan binaan dapat dibaca."
+    );
   } catch (error) {
-    say("dataStatus", `Pengujian gagal: ${errText(error)}`);
+    say(
+      "dataStatus",
+      `Pengujian gagal: ${errText(error)}`
+    );
   } finally {
     setBusy("loadBtn", false);
   }
@@ -365,10 +439,15 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
   say("saveStatus", "Memvalidasi data sebelum disimpan…");
 
   try {
-    if (!auth.currentUser) throw new Error("Anda belum login.");
+    if (!auth.currentUser) {
+      throw new Error("Anda belum login.");
+    }
 
     const valid = await checkProfile(auth.currentUser);
-    if (!valid) throw new Error("Profil akun belum terverifikasi.");
+
+    if (!valid) {
+      throw new Error("Profil akun belum terverifikasi.");
+    }
 
     const binaanId = $("binaanSelect")?.value;
     const tanggal = $("tanggalInput")?.value;
@@ -380,7 +459,10 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
       throw new Error("Lengkapi semua kolom formulir.");
     }
 
-    if (!["hafalan", "tilawah", "murajaah", "ibadah", "lainnya"].includes(jenis)) {
+    if (
+      !["hafalan", "tilawah", "murajaah", "ibadah", "lainnya"]
+        .includes(jenis)
+    ) {
       throw new Error("Jenis Mutabaah tidak valid.");
     }
 
@@ -392,16 +474,26 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
       throw new Error("Catatan terlalu panjang.");
     }
 
-    // Verifikasi binaan masih ada dan aktif.
-    const binaanSnap = await getDoc(
-      doc(db, "upas", UPA_ID, "binaan", binaanId)
+    // Periksa dokumen binaan.
+    const binaanRef = doc(
+      db,
+      "upas",
+      UPA_ID,
+      "binaan",
+      binaanId
     );
 
-    if (!binaanSnap.exists() || binaanSnap.data().aktif !== true) {
-      throw new Error("Binaan tidak ditemukan atau tidak aktif.");
+    const binaanSnap = await getDoc(binaanRef);
+
+    if (!binaanSnap.exists()) {
+      throw new Error("Dokumen binaan tidak ditemukan.");
     }
 
     const binaan = binaanSnap.data();
+
+    if (binaan.aktif !== true) {
+      throw new Error("Binaan tidak aktif.");
+    }
 
     if (
       currentProfile.role === "pembina" &&
@@ -410,14 +502,16 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
       throw new Error("Binaan ini bukan penugasan Anda.");
     }
 
+    // PENTING:
+    // Field harus sama persis dengan Firestore Rules.
+    // Jangan tambahkan upaId atau dibuatOleh.
     const payload = {
-      upaId: UPA_ID,
-      binaanId,
-      tanggal,
-      jenis,
-      catatan,
-      status,
-      dibuatOleh: auth.currentUser.uid,
+      binaanId: binaanId,
+      tanggal: tanggal,
+      jenis: jenis,
+      catatan: catatan,
+      pencatatUid: auth.currentUser.uid,
+      status: status,
       dibuatPada: serverTimestamp()
     };
 
@@ -438,11 +532,24 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
     $("mutabaahForm").reset();
 
     const dateInput = $("tanggalInput");
-    if (dateInput) dateInput.value = todayString();
+    if (dateInput) {
+      dateInput.value = todayString();
+    }
 
     await loadBinaan();
   } catch (error) {
-    say("saveStatus", `Gagal menyimpan Mutabaah: ${errText(error)}`);
+    say(
+      "saveStatus",
+      `Gagal menyimpan Mutabaah: ${errText(error)}`
+    );
+
+    // Detail kode ditampilkan untuk mempermudah diagnosis.
+    if (error?.code) {
+      say(
+        "dataStatus",
+        `Kode error: ${error.code}\n${error.message || ""}`
+      );
+    }
   } finally {
     setBusy("saveMutabaahBtn", false);
   }
@@ -452,16 +559,27 @@ $("mutabaahForm")?.addEventListener("submit", async event => {
 $("mutabaahBtn")?.addEventListener("click", async () => {
   setBusy("mutabaahBtn", true);
   show($("mutabaahResult"), false);
-  say("dataStatus", "Membaca Mutabaah dan mencocokkan nama binaan…");
+
+  say(
+    "dataStatus",
+    "Membaca Mutabaah dan mencocokkan nama binaan…"
+  );
 
   try {
-    if (!auth.currentUser) throw new Error("Anda belum login.");
+    if (!auth.currentUser) {
+      throw new Error("Anda belum login.");
+    }
 
     const valid = await checkProfile(auth.currentUser);
-    if (!valid) throw new Error("Profil akun belum terverifikasi.");
+
+    if (!valid) {
+      throw new Error("Profil akun belum terverifikasi.");
+    }
 
     if (currentProfile.role !== "admin_upa") {
-      throw new Error("Pembacaan seluruh Mutabaah hanya untuk admin.");
+      throw new Error(
+        "Pembacaan seluruh Mutabaah hanya untuk admin."
+      );
     }
 
     const snap = await getDocs(
@@ -469,9 +587,18 @@ $("mutabaahBtn")?.addEventListener("click", async () => {
     );
 
     if (snap.empty) {
-      say("mutabaahResult", "Pembacaan berhasil, tetapi belum ada catatan Mutabaah.");
+      say(
+        "mutabaahResult",
+        "Pembacaan berhasil, tetapi belum ada catatan Mutabaah."
+      );
+
       show($("mutabaahResult"), true);
-      say("dataStatus", "Koleksi Mutabaah berhasil dibaca dan masih kosong.");
+
+      say(
+        "dataStatus",
+        "Koleksi Mutabaah berhasil dibaca dan masih kosong."
+      );
+
       return;
     }
 
@@ -486,11 +613,19 @@ $("mutabaahBtn")?.addEventListener("click", async () => {
         if (binaanId) {
           try {
             const binaanSnap = await getDoc(
-              doc(db, "upas", UPA_ID, "binaan", binaanId)
+              doc(
+                db,
+                "upas",
+                UPA_ID,
+                "binaan",
+                binaanId
+              )
             );
 
             if (binaanSnap.exists()) {
-              namaBinaan = binaanSnap.data().nama ?? "(nama tidak tersedia)";
+              namaBinaan =
+                binaanSnap.data().nama ?? "(nama tidak tersedia)";
+
               pencocokan = "Ditemukan";
             }
           } catch (error) {
@@ -509,6 +644,7 @@ $("mutabaahBtn")?.addEventListener("click", async () => {
           `Tanggal: ${v.tanggal ?? "(tidak ada)"}\n` +
           `Jenis: ${v.jenis ?? "(tidak ada)"}\n` +
           `Catatan: ${v.catatan ?? "(tidak ada)"}\n` +
+          `Pencatat UID: ${v.pencatatUid ?? "(tidak ada)"}\n` +
           `Status: ${v.status ?? "(tidak ada)"}`
         );
       })
@@ -519,14 +655,19 @@ $("mutabaahBtn")?.addEventListener("click", async () => {
       `Daftar Mutabaah (${records.length} catatan)\n\n` +
       records.join("\n\n--------------------\n\n")
     );
+
     show($("mutabaahResult"), true);
 
     say(
       "dataStatus",
-      `BERHASIL: ${records.length} catatan dibaca dan pencocokan binaan diperiksa.`
+      `BERHASIL: ${records.length} catatan dibaca ` +
+      "dan pencocokan binaan diperiksa."
     );
   } catch (error) {
-    say("dataStatus", `Uji baca Mutabaah gagal: ${errText(error)}`);
+    say(
+      "dataStatus",
+      `Uji baca Mutabaah gagal: ${errText(error)}`
+    );
   } finally {
     setBusy("mutabaahBtn", false);
   }
@@ -552,9 +693,11 @@ onAuthStateChanged(auth, async user => {
 
   if (!user) {
     resetDashboard();
+
     say("loginStatus", "Belum masuk.");
     say("accountStatus", "Belum masuk.");
     say("dataStatus", "Data belum diuji.");
+
     return;
   }
 
@@ -569,22 +712,33 @@ onAuthStateChanged(auth, async user => {
     }
 
     if (valid && currentProfile?.role === "admin_upa") {
-      say("dataStatus", "Profil admin terverifikasi. Silakan pilih pengujian.");
+      say(
+        "dataStatus",
+        "Profil admin terverifikasi. Silakan pilih pengujian."
+      );
     } else if (!valid) {
-      say("dataStatus", "Profil belum lolos pemeriksaan.");
+      say(
+        "dataStatus",
+        "Profil belum lolos pemeriksaan."
+      );
     }
   } catch (error) {
     profileValid = false;
     currentProfile = null;
+
     show($("inputCard"), false);
     show($("mutabaahCard"), false);
-    say("accountStatus", `Gagal memeriksa profil: ${errText(error)}`);
+
+    say(
+      "accountStatus",
+      `Gagal memeriksa profil: ${errText(error)}`
+    );
   } finally {
     loadingProfile = false;
   }
 });
 
-// Isi tanggal awal formulir.
+// ISI TANGGAL AWAL FORMULIR
 if ($("tanggalInput") && !$("tanggalInput").value) {
   $("tanggalInput").value = todayString();
 }
