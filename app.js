@@ -103,7 +103,7 @@ async function checkProfile(user) {
   }
 
   profileValid = true;
-
+show($("mutabaahCard"), true);
   say(
     "accountStatus",
     `Profil admin terverifikasi.\n` +
