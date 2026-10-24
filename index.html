@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="id">
 <head>
@@ -6,238 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0f766e">
   <title>Mutabaah UPA Test</title>
-
   <style>
-    :root {
-      font-family: system-ui, sans-serif;
-      color: #172033;
-      background: #f1f5f9;
-    }
-
-    * { box-sizing: border-box; }
-
-    body { margin: 0; }
-
-    header {
-      background: #0f766e;
-      color: white;
-      padding: 22px 18px;
-    }
-
-    header h1 { margin: 0; font-size: 1.35rem; }
-    header p { margin: 6px 0 0; color: #d1fae5; }
-
-    main {
-      max-width: 760px;
-      margin: 22px auto;
-      padding: 0 14px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid #dbe3ec;
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 3px 12px #0f172a0a;
-    }
-
-    h2 { font-size: 1.05rem; margin: 0 0 14px; }
-
-    label {
-      display: block;
-      font-weight: 650;
-      margin: 12px 0 6px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      font: inherit;
-      background: white;
-    }
-
-    textarea { min-height: 100px; resize: vertical; }
-
-    button {
-      border: 0;
-      border-radius: 10px;
-      padding: 11px 15px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:disabled { opacity: .6; cursor: wait; }
-
-    .primary { background: #0f766e; color: white; }
-    .secondary { background: #e2e8f0; color: #172033; }
-    .danger { background: #fee2e2; color: #991b1b; }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .status {
-      padding: 12px;
-      border-radius: 10px;
-      background: #f8fafc;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .muted { color: #64748b; font-size: .9rem; }
-    .hidden { display: none !important; }
-
-    .result {
-      padding: 12px;
-      border: 1px solid #dbe3ec;
-      border-radius: 10px;
-      margin-top: 10px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    ul { padding-left: 20px; }
-
-    footer {
-      text-align: center;
-      color: #64748b;
-      font-size: .82rem;
-      padding: 18px;
-    }
+    :root{font-family:system-ui,sans-serif;color:#172033;background:#f1f5f9}*{box-sizing:border-box}body{margin:0}header{background:#0f766e;color:white;padding:22px 18px}header h1{margin:0;font-size:1.35rem}header p{margin:6px 0 0;color:#d1fae5}main{max-width:800px;margin:22px auto;padding:0 14px}.card{background:white;border:1px solid #dbe3ec;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #0f172a0a}h2{font-size:1.05rem;margin:0 0 14px}label{display:block;font-weight:650;margin:12px 0 6px}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:white}textarea{min-height:100px;resize:vertical}button{border:0;border-radius:10px;padding:11px 15px;font:inherit;font-weight:700;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.primary{background:#0f766e;color:white}.secondary{background:#e2e8f0;color:#172033}.danger{background:#fee2e2;color:#991b1b}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.status{padding:12px;border-radius:10px;background:#f8fafc;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid #e2e8f0}.status-success{background:#ecfdf5;border-color:#86efac;color:#166534}.status-error{background:#fef2f2;border-color:#fca5a5;color:#991b1b}.status-info{background:#f8fafc;color:#334155}.muted{color:#64748b;font-size:.9rem}.hidden{display:none!important}.result{padding:12px;border:1px solid #dbe3ec;border-radius:10px;margin-top:10px;white-space:pre-wrap;overflow-wrap:anywhere}ul{padding-left:20px}footer{text-align:center;color:#64748b;font-size:.82rem;padding:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:520px){.grid{grid-template-columns:1fr}.card{padding:15px}}
   </style>
 </head>
-
 <body>
-<header>
-  <h1>Mutabaah UPA Test</h1>
-  <p>Lingkungan pengujian — bukan aplikasi produksi</p>
-</header>
-
+<header><h1>Mutabaah UPA Test</h1><p>Lingkungan pengujian — bukan aplikasi produksi</p></header>
 <main>
-  <section class="card" id="loginCard">
-    <h2>Masuk ke aplikasi</h2>
-    <p class="muted">Gunakan akun pengujian yang sudah terdaftar di Firebase.</p>
-
-    <form id="loginForm">
-      <label for="email">Email</label>
-      <input id="email" type="email" autocomplete="username" required>
-
-      <label for="password">Kata sandi</label>
-      <input id="password" type="password"
-        autocomplete="current-password" required>
-
-      <div class="actions">
-        <button class="primary" id="loginBtn" type="submit">Masuk</button>
-      </div>
-    </form>
-
-    <div id="loginStatus" class="status" role="status"
-      style="margin-top:12px">Belum masuk.</div>
+  <section class="card" id="loginCard"><h2>Masuk ke aplikasi</h2><p class="muted">Gunakan akun pengujian yang sudah terdaftar di Firebase.</p>
+    <form id="loginForm"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Kata sandi</label><input id="password" type="password" autocomplete="current-password" required><div class="actions"><button class="primary" id="loginBtn" type="submit">Masuk</button></div></form>
+    <div id="loginStatus" class="status" role="status" style="margin-top:12px">Belum masuk.</div>
   </section>
-
-  <section class="card hidden" id="dashboard">
-    <h2>Status akun</h2>
-    <div id="accountStatus" class="status">Memeriksa akun…</div>
-
-    <div class="actions">
-      <button class="primary" id="loadBtn" type="button">
-        Uji baca data UPA
-      </button>
-      <button class="secondary" id="refreshBtn" type="button">
-        Periksa profil lagi
-      </button>
-      <button class="danger" id="logoutBtn" type="button">
-        Keluar
-      </button>
-    </div>
-
-    <div id="dataStatus" class="status" role="status"
-      style="margin-top:12px">Data belum diuji.</div>
-
-    <div id="upaResult" class="result hidden"></div>
-    <div id="binaanResult" class="result hidden"></div>
+  <section class="card hidden" id="dashboard"><h2>Status akun</h2><div id="accountStatus" class="status">Memeriksa akun…</div><div class="actions"><button class="primary" id="loadBtn" type="button">Uji baca data UPA</button><button class="secondary" id="refreshBtn" type="button">Periksa profil lagi</button><button class="danger" id="logoutBtn" type="button">Keluar</button></div><div id="dataStatus" class="status" role="status" style="margin-top:12px">Data belum diuji.</div><div id="upaResult" class="result hidden"></div><div id="binaanResult" class="result hidden"></div></section>
+  <section class="card hidden" id="inputCard"><h2>Input Mutabaah</h2><p class="muted">Pilih binaan yang ditugaskan kepada Anda. Firestore Rules tetap memvalidasi hak akses.</p>
+    <form id="mutabaahForm"><label for="binaanSelect">Binaan</label><select id="binaanSelect" required><option value="">Pilih binaan</option></select><label for="tanggalInput">Tanggal kegiatan</label><input id="tanggalInput" type="date" required><label for="jenisInput">Jenis Mutabaah</label><select id="jenisInput" required><option value="">Pilih jenis</option><option value="hafalan">Hafalan</option><option value="tilawah">Tilawah</option><option value="murajaah">Murajaah</option><option value="ibadah">Ibadah</option><option value="lainnya">Lainnya</option></select><label for="catatanInput">Catatan perkembangan</label><textarea id="catatanInput" maxlength="2000" placeholder="Tuliskan perkembangan binaan..." required></textarea><label for="statusInput">Status kegiatan</label><select id="statusInput" required><option value="selesai">Selesai</option><option value="proses">Dalam proses</option></select><div class="actions"><button class="primary" id="saveMutabaahBtn" type="submit">Simpan Mutabaah</button></div></form>
+    <div id="saveStatus" class="status status-info" role="status" style="margin-top:12px">Formulir belum dikirim.</div>
   </section>
-
-  <section class="card hidden" id="inputCard">
-    <h2>Input Mutabaah</h2>
-    <p class="muted">
-      Pilih binaan yang ditugaskan kepada Anda. Data akan divalidasi
-      kembali oleh Firestore Rules.
-    </p>
-
-    <form id="mutabaahForm">
-      <label for="binaanSelect">Binaan</label>
-      <select id="binaanSelect" required>
-        <option value="">Pilih binaan</option>
-      </select>
-
-      <label for="tanggalInput">Tanggal kegiatan</label>
-      <input id="tanggalInput" type="date" required>
-
-      <label for="jenisInput">Jenis Mutabaah</label>
-      <select id="jenisInput" required>
-        <option value="">Pilih jenis</option>
-        <option value="hafalan">Hafalan</option>
-        <option value="tilawah">Tilawah</option>
-        <option value="murajaah">Murajaah</option>
-        <option value="ibadah">Ibadah</option>
-        <option value="lainnya">Lainnya</option>
-      </select>
-
-      <label for="catatanInput">Catatan perkembangan</label>
-      <textarea id="catatanInput" maxlength="2000"
-        placeholder="Tuliskan perkembangan binaan..."
-        required></textarea>
-
-      <label for="statusInput">Status kegiatan</label>
-      <select id="statusInput" required>
-        <option value="selesai">Selesai</option>
-        <option value="proses">Dalam proses</option>
-      </select>
-
-      <div class="actions">
-        <button class="primary" id="saveMutabaahBtn" type="submit">
-          Simpan Mutabaah
-        </button>
-      </div>
-    </form>
-
-    <div id="saveStatus" class="status" role="status"
-      style="margin-top:12px">Formulir belum dikirim.</div>
+  <section class="card hidden" id="mutabaahCard"><h2>Catatan Mutabaah (Admin)</h2><button class="secondary" id="mutabaahBtn" type="button">Baca data Mutabaah</button><div id="mutabaahResult" class="result hidden"></div></section>
+  <section class="card hidden" id="toolsCard"><h2>Laporan, Ekspor & Impor Excel</h2><p class="muted">Ekspor berisi data yang dapat diakses akun yang sedang login. Impor hanya menambahkan data baru dan tidak mengubah data lama.</p>
+    <div class="grid"><div><label for="filterStart">Tanggal awal (opsional)</label><input id="filterStart" type="date"></div><div><label for="filterEnd">Tanggal akhir (opsional)</label><input id="filterEnd" type="date"></div></div>
+    <label for="filterBinaan">Filter binaan</label><select id="filterBinaan"><option value="">Semua binaan yang dapat diakses</option></select>
+    <div class="actions"><button class="primary" id="exportBtn" type="button">Ekspor Excel (.xlsx)</button></div>
+    <label for="importFile">Pilih file Excel untuk impor (.xlsx atau .xls)</label><input id="importFile" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
+    <p class="muted">Kolom impor wajib: ID Binaan, Tanggal, Jenis, Catatan, Status. Format tanggal: YYYY-MM-DD. Jenis: hafalan/tilawah/murajaah/ibadah/lainnya. Status: selesai/proses. Kolom nama binaan, UID, dan ID catatan dari file tidak digunakan sebagai sumber hak akses.</p>
+    <div class="actions"><button class="primary" id="importBtn" type="button">Validasi & Impor Excel</button></div><div id="fileStatus" class="status status-info" role="status" style="margin-top:12px">Silakan pilih tindakan.</div>
   </section>
-
-  <section class="card hidden" id="mutabaahCard">
-    <h2>Catatan Mutabaah</h2>
-    <button class="secondary" id="mutabaahBtn" type="button">
-      Uji baca data Mutabaah
-    </button>
-    <div id="mutabaahResult" class="result hidden"></div>
-  </section>
-
-  <section class="card">
-    <h2>Informasi pengujian</h2>
-    <ul>
-      <li>Login melalui Firebase Authentication.</li>
-      <li>Profil diperiksa berdasarkan UPA dan UID.</li>
-      <li>Pembacaan data dibatasi oleh Firestore Rules.</li>
-      <li>Penyimpanan Mutabaah akan diuji setelah JavaScript dan Rules disesuaikan.</li>
-    </ul>
-    <p class="muted">
-      Aplikasi ini masih dalam tahap pengujian dan belum untuk data produksi.
-    </p>
-  </section>
-</main>
-
-<footer>Mutabaah-UPA-Test · versi pengujian</footer>
-
-<script type="module" src="./firebase.js"></script>
+  <section class="card"><h2>Informasi pengujian</h2><ul><li>Login melalui Firebase Authentication.</li><li>Profil diperiksa berdasarkan UPA dan UID.</li><li>Pembina hanya dapat mengimpor/mengekspor binaan yang ditugaskan.</li><li>Impor memvalidasi baris dan memeriksa duplikasi sebelum menyimpan.</li></ul><p class="muted">Aplikasi ini masih dalam tahap pengujian dan belum untuk data produksi. Ekspor/impor memerlukan koneksi internet untuk memuat pustaka Excel.</p></section>
+</main><footer>Mutabaah-UPA-Test · versi pengujian</footer>
 <script type="module" src="./app.js"></script>
-</body>
-</html>
+</body></html>
